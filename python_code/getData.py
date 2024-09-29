@@ -1,10 +1,14 @@
-import Serial
+#Credits to The Bored Robot @ Youtube (https://www.youtube.com/watch?v=PhDPnjF3_tA&list=PLDQbF7EgWNg9_Aem8LEkfW5HC1zEHC3BM&index=3&t=162s)
+
+import serial
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-importcsv
+import csv
 
-SERIAL_PORT = "com9"
+SampleRate = 200
+
+SERIAL_PORT = "com6"
 BAUD_RATE = 115200
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
 
@@ -18,7 +22,7 @@ accelZ = []
 
 def read_serial(ser):
     data = ser.readline().decode('utf-8').strip()
-    data = line.split("\t")
+    data = data.split("\t")
     
     time_stamp.append(float(data[0]))
     gyroX.append(float(data[1]))
@@ -44,3 +48,29 @@ def update_graph(frame):
     plt.legend(loc='upper left')
     #plt.tight_layout()
     plt.legend()
+
+def on_close(event):
+    with open('pico_data.csv', 'w', newline='') as csvfile:
+        fieldnames = ['time_stamp', 'gyroX', 'gyroY', 'gyroZ', 'accelX', 'accelY', 'accelZ']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for t, gx, gy, gz, ax, ay, az in zip(time_stamp, gyroX, gyroY, gyroZ, accelX, accelY, accelZ):
+            writer.writerow({
+                'time_stamp': t,
+                'gyroX': gx,
+                'gyroY': gy,
+                'gyroZ': gz,
+                'accelX': ax,
+                'accelY': ay,
+                'accelZ': az
+                })
+
+def on_close_dummy(event):
+    pass
+
+fig, ax = plt.subplots()
+fig.canvas.mpl_connect('close_event', on_close)
+
+ani = FuncAnimation(fig, update_graph, interval=SampleRate)
+plt.show()
+input("Press Enter to exit...")

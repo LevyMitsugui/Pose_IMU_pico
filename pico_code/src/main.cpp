@@ -5,7 +5,10 @@
 #define MARG_SDA 2
 #define MARG_SCL 3
 
-#define WAIT_FOR_SERIAL true
+#define WAIT_FOR_SERIAL
+//#define RUN_I2C_SCANNER
+
+#define PERIOD 200
 
 MPU9250 IMU(Wire1,0x68);
 int status;
@@ -13,16 +16,21 @@ int status;
 MPU9250 bruteForce_imu(MPU9250 &IMU, int &status);
 bool scan_I2C();
 
+
+float pico_time = 0;
+
 void setup() {
   Serial.begin(115200);
-#if WAIT_FOR_SERIAL
+#ifdef WAIT_FOR_SERIAL
   while(!Serial) {}
 #endif
   Wire1.setSDA(MARG_SDA);
   Wire1.setSCL(MARG_SCL);
   Wire1.begin();
 
+#ifdef RUN_I2C_SCANNER
   scan_I2C();
+#endif
 
   //bruteForce_imu(IMU, status);
   status = IMU.begin();
@@ -35,40 +43,31 @@ void setup() {
   // setting DLPF bandwidth to 20 Hz
   IMU.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_20HZ);
   // setting SRD to 19 for a 50 Hz update rate
-  Serial.println(IMU.setSrd(19));
+  IMU.setSrd(19);
   delay(5000);
 }
 
 void loop() {
+  pico_time = millis();
   IMU.readSensor();
+  Serial.print(pico_time);
+  Serial.print("\t");
   Serial.print(IMU.getGyroX_rads());
   Serial.print("\t");
   Serial.print(IMU.getGyroY_rads());
   Serial.print("\t");
   Serial.print(IMU.getGyroZ_rads());
   Serial.print("\t");
-  Serial.print("\t");
   Serial.print(IMU.getAccelX_mss());
   Serial.print("\t");
   Serial.print(IMU.getAccelY_mss());
   Serial.print("\t");
   Serial.print(IMU.getAccelZ_mss());
-  delay(100);
+  Serial.println();
+  delay(PERIOD);
 
 }
 
-MPU9250 bruteForce_imu(MPU9250 &IMU, int &status) {
-  while(true) {
-    MPU9250 IMU(Wire1,0x69);
-    status = IMU.begin();
-    delay(100);
-    Serial.print(status);
-    if (status >= 0) {
-      break;
-    }
-  }
-  return IMU;
-}
 
 bool scan_I2C() {
   bool ret;
