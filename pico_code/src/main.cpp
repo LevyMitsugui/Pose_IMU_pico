@@ -1,14 +1,19 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "MPU9250.h"
+extern "C" {
+  #include "madgwickFilter.h"
+}
 
 #define MARG_SDA 2
 #define MARG_SCL 3
 
 #define WAIT_FOR_SERIAL
 //#define RUN_I2C_SCANNER
+//#define PRINT_RAW
+#define MADGWICK
 
-#define PERIOD 200
+#define PERIOD 10
 
 MPU9250 IMU(Wire1,0x68);
 int status;
@@ -16,8 +21,9 @@ int status;
 MPU9250 bruteForce_imu(MPU9250 &IMU, int &status);
 bool scan_I2C();
 
-
+float roll = 0.0, pitch = 0.0, yaw = 0.0;
 float pico_time = 0;
+
 
 void setup() {
   Serial.begin(115200);
@@ -44,12 +50,25 @@ void setup() {
   IMU.setDlpfBandwidth(MPU9250::DLPF_BANDWIDTH_20HZ);
   // setting SRD to 19 for a 50 Hz update rate
   IMU.setSrd(19);
-  delay(5000);
+  delay(1000);
 }
 
 void loop() {
   pico_time = millis();
   IMU.readSensor();
+
+#ifdef MADGWICK
+  imu_filter(IMU.getAccelX_mss(), IMU.getAccelY_mss(), IMU.getAccelZ_mss(), IMU.getGyroX_rads(), IMU.getGyroY_rads(), IMU.getGyroZ_rads());
+  eulerAngles(q_est, &roll, &pitch, &yaw);
+  Serial.print("roll: ");
+  Serial.print(roll);
+  Serial.print("\tpitch: ");
+  Serial.print(pitch);
+  Serial.print("\tyaw: ");
+  Serial.println(yaw);
+#endif
+
+#ifdef PRINT_RAW
   Serial.print(pico_time);
   Serial.print("\t");
   Serial.print(IMU.getGyroX_rads());
@@ -64,8 +83,11 @@ void loop() {
   Serial.print("\t");
   Serial.print(IMU.getAccelZ_mss());
   Serial.println();
+#endif
+  
+  
+  
   delay(PERIOD);
-
 }
 
 
