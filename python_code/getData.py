@@ -1,14 +1,15 @@
 #Credits to The Bored Robot @ Youtube (https://www.youtube.com/watch?v=PhDPnjF3_tA&list=PLDQbF7EgWNg9_Aem8LEkfW5HC1zEHC3BM&index=3&t=162s)
+#https://www.arduinolearning.com/code/arduino-bmi160-sensor-example.php
 
 import serial
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
 import csv
 
-SampleRate = 200
+save_samples = False
+SampleRate = 100
 
-SERIAL_PORT = "com6"
+SERIAL_PORT = "com8"
 BAUD_RATE = 115200
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
 
@@ -49,27 +50,30 @@ def update_graph(frame):
     #plt.tight_layout()
     plt.legend()
 
-def on_close(event):
-    with open('pico_data.csv', 'w', newline='') as csvfile:
-        fieldnames = ['time_stamp', 'gyroX', 'gyroY', 'gyroZ', 'accelX', 'accelY', 'accelZ']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for t, gx, gy, gz, ax, ay, az in zip(time_stamp, gyroX, gyroY, gyroZ, accelX, accelY, accelZ):
-            writer.writerow({
-                'time_stamp': t,
-                'gyroX': gx,
-                'gyroY': gy,
-                'gyroZ': gz,
-                'accelX': ax,
-                'accelY': ay,
-                'accelZ': az
-                })
+def on_close(event, save_samples=False):
+    if save_samples:
+        with open('pico_data.csv', 'w', newline='') as csvfile:
+            fieldnames = ['time_stamp', 'gyroX', 'gyroY', 'gyroZ', 'accelX', 'accelY', 'accelZ']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for t, gx, gy, gz, ax, ay, az in zip(time_stamp, gyroX, gyroY, gyroZ, accelX, accelY, accelZ):
+                writer.writerow({
+                    'time_stamp': t,
+                    'gyroX': gx,
+                    'gyroY': gy,
+                    'gyroZ': gz,
+                    'accelX': ax,
+                    'accelY': ay,
+                    'accelZ': az
+                    })
+    else:
+        pass
 
 def on_close_dummy(event):
     pass
 
 fig, ax = plt.subplots()
-fig.canvas.mpl_connect('close_event', on_close)
+fig.canvas.mpl_connect('close_event', on_close(save_samples))
 
 ani = FuncAnimation(fig, update_graph, interval=SampleRate)
 plt.show()
