@@ -12,6 +12,7 @@ BAUD_RATE = 115200
 SAMPLE_RATE_HZ = 100
 ROLLING_WINDOW_SECONDS = 5
 MAX_DEQUE_LEN = SAMPLE_RATE_HZ * ROLLING_WINDOW_SECONDS
+PRINT_INTERVAL_MS = 50  # Match plot update rate
 
 # === Serial Setup ===
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
@@ -30,8 +31,12 @@ plot_accelX = deque(maxlen=MAX_DEQUE_LEN)
 plot_accelY = deque(maxlen=MAX_DEQUE_LEN)
 plot_accelZ = deque(maxlen=MAX_DEQUE_LEN)
 
+# === Most recent value for printing ===
+latest_sample = None
+
 # === Threading ===
 def serial_reader():
+    global latest_sample
     while True:
         try:
             line = ser.readline().decode('utf-8').strip()
@@ -64,6 +69,9 @@ def serial_reader():
                     plot_accelY.append(ay)
                     plot_accelZ.append(az)
 
+            # Update latest sample for printing
+            latest_sample = (t, gx, gy, gz, ax, ay, az)
+
         except Exception as e:
             print(f"Error reading serial: {e}")
 
@@ -92,6 +100,7 @@ curve_az = plot.plot(pen='c', name='Accel Z')
 def update():
     if not plot_time:
         return
+
     t0 = plot_time[-1] - ROLLING_WINDOW_SECONDS
     times = [t for t in plot_time if t >= t0]
     idx_start = len(plot_time) - len(times)
@@ -102,10 +111,15 @@ def update():
     curve_ay.setData(times, list(plot_accelY)[idx_start:])
     curve_az.setData(times, list(plot_accelZ)[idx_start:])
 
-# Update plot every 50 ms (20 FPS)
+    # Print latest sample
+    if latest_sample:
+        print(f"t={latest_sample[0]:.2f}, gx={latest_sample[1]:.2f}, gy={latest_sample[2]:.2f}, gz={latest_sample[3]:.2f}, "
+              f"ax={latest_sample[4]:.2f}, ay={latest_sample[5]:.2f}, az={latest_sample[6]:.2f}")
+
+# Update plot and print every 50 ms (20 FPS)
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
-timer.start(50)
+timer.start(PRINT_INTERVAL_MS)
 
 # === Save on close ===
 def save_data():
