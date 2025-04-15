@@ -1,5 +1,6 @@
-#include <BMI160Gen.h>            //https://github.com/hanyazou/BMI160-Arduino
-#include <Wire.h>
+// #include <BMI160Gen.h>            //https://github.com/hanyazou/BMI160-Arduino
+// #include <Wire.h>
+#include <Arduino.h>
 
 #define SDA_PIN 0
 #define SCL_PIN 1
@@ -15,43 +16,51 @@ int gx, gy, gz; // Raw gyroscope values
 int ax, ay, az; // Raw accelerometer values
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial);
+  delay(1000);
+  // Serial.begin(115200);
+  // while (!Serial);
 
+  
+  pinMode(25, OUTPUT); // Onboard LED
 
-  Wire.setSDA(SDA_PIN);
-  Wire.setSCL(SCL_PIN);
-  Wire.begin();
+  // Wire.setSDA(SDA_PIN);
+  // Wire.setSCL(SCL_PIN);
+  // Wire.begin();
  
 
-  if (!BMI160.begin(BMI160GenClass::I2C_MODE, i2c_addr)) {
-    Serial.println("BMI160 initialization failed!");
-    while (1); // Halt if initialization fails
-  }
+  // if (!BMI160.begin(BMI160GenClass::I2C_MODE, i2c_addr)) {
+  //   Serial.println("BMI160 initialization failed!");
+  //   while (1); // Halt if initialization fails
+  // }
  
   //Serial.println("BMI160 initialized successfully in I2C mode!");
 }
  
 void loop() {
-  pico_time = millis();
-  if ((pico_time - prev_time) > cycle) {
-    prev_time = pico_time;
+  digitalWrite(25, HIGH);
+  delay(500);
+  digitalWrite(25, LOW);
+  delay(500);
+
+  // pico_time = millis();
+  // if ((pico_time - prev_time) > cycle) {
+  //   prev_time = pico_time;
   
-    BMI160.readGyro(gx, gy, gz); 
-    BMI160.readAccelerometer(ax, ay, az);
+  //   BMI160.readGyro(gx, gy, gz); 
+  //   BMI160.readAccelerometer(ax, ay, az);
   
-    Serial.print(((float)pico_time)/1000, 3);
-    Serial.print("\t");
-    Serial.print(gx);
-    Serial.print("\t");
-    Serial.print(gy);
-    Serial.print("\t");
-    Serial.print(gz);
-    Serial.print("\t");
-    Serial.print(ax);
-    Serial.print("\t");
-    Serial.print(ay);
-    Serial.print("\t");
-    Serial.println(az);
-  }
+  //   Serial.print(((float)pico_time)/1000, 3);
+  //   Serial.print("\t");
+  //   Serial.print(gx);
+  //   Serial.print("\t");
+  //   Serial.print(gy);
+  //   Serial.print("\t");
+  //   Serial.print(gz);
+  //   Serial.print("\t");
+  //   Serial.print(ax);
+  //   Serial.print("\t");
+  //   Serial.print(ay);
+  //   Serial.print("\t");
+  //   Serial.println(az);
+  // }
 }
