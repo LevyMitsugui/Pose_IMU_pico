@@ -15,11 +15,26 @@ long cycle = 200;	// cycle period in milliseconds
 int gx, gy, gz; // Raw gyroscope values
 int ax, ay, az; // Raw accelerometer values
 
-void setup() {
-  delay(1000);
-  // Serial.begin(115200);
-  // while (!Serial);
 
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  Serial.begin(115200);
+  while (!Serial){
+    for(int i=0; i<3; i++){
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(150);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(150);
+    }
+    delay (750);
+  }
+  for(int i=0; i<2; i++){
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(80);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(80);
+    }
   
   pinMode(25, OUTPUT); // Onboard LED
 
@@ -41,6 +56,7 @@ void loop() {
   delay(500);
   digitalWrite(25, LOW);
   delay(500);
+  Serial.println("end of cycle");
 
   // pico_time = millis();
   // if ((pico_time - prev_time) > cycle) {
